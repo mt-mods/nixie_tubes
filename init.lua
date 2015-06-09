@@ -52,14 +52,16 @@ end
 for _,tube in ipairs(nixie_types) do
 	local groups = { cracky = 2, not_in_creative_inventory = 1}
 	local light = LIGHT_MAX-4
+	local description = S("Nixie Tube ("..tube..")")
 
 	if tube == "off" then
 		groups = {cracky = 2}
 		light = nil
+		description = S("Nixie Tube")
 	end
 
 	minetest.register_node("nixie_tubes:tube_"..tube, {
-		description = S("Nixie Tube ("..tube..")"),
+		description = description,
 		drawtype = "mesh",
 		mesh = "nixie_tube.obj",
 		tiles = {
@@ -90,6 +92,7 @@ for _,tube in ipairs(nixie_types) do
 				action = on_digiline_receive
 			},
 		},
+		drop = "nixie_tubes:tube_off"
 	})
 end
 
