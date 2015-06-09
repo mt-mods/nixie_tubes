@@ -53,11 +53,13 @@ for _,tube in ipairs(nixie_types) do
 	local groups = { cracky = 2, not_in_creative_inventory = 1}
 	local light = LIGHT_MAX-4
 	local description = S("Nixie Tube ("..tube..")")
+	local cathode = "nixie_tube_cathode_off.png^nixie_tube_cathode_"..tube..".png"
 
 	if tube == "off" then
 		groups = {cracky = 2}
 		light = nil
 		description = S("Nixie Tube")
+		cathode = "nixie_tube_cathode_off.png"
 	end
 
 	minetest.register_node("nixie_tubes:tube_"..tube, {
@@ -67,7 +69,7 @@ for _,tube in ipairs(nixie_types) do
 		tiles = {
 			"nixie_tube_base.png",
 			"nixie_tube_backing.png",
-			"nixie_tube_cathode_"..tube..".png",
+			cathode,
 			"nixie_tube_anode.png",
 			"nixie_tube_glass.png",
 		},
