@@ -28,7 +28,7 @@ local nixie_types = {
 
 local tube_cbox = {
 	type = "fixed",
-	fixed = { -4/16, -8/16, -4/16, 4/16, 2/16, 4/16 }
+	fixed = { -11/32, -8/16, -11/32, 11/32, 8/16, 11/32 }
 }
 
 -- the following functions based on the so-named ones in Jeija's digilines mod
