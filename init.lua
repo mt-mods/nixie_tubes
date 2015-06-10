@@ -41,8 +41,8 @@ local on_digiline_receive = function(pos, node, channel, msg)
 	local meta = minetest.get_meta(pos)
 	local setchan = meta:get_string("channel")
 	if setchan ~= channel then return end
-	local num = tonumber(msg) or 0
-	if msg == "colon" or msg == "period" or msg == "off" or (num >= 0 and num <= 9) then
+	local num = tonumber(msg)
+	if msg == "colon" or msg == "period" or msg == "off" or (num and (num >= 0 and num <= 9)) then
 		minetest.swap_node(pos, { name = "nixie_tubes:tube_"..msg, param2 = node.param2})
 	end
 end
