@@ -228,7 +228,7 @@ local on_digiline_receive_alnum = function(pos, node, channel, msg)
 	local meta = minetest.get_meta(pos)
 	local setchan = meta:get_string("channel")
 	if setchan ~= channel then return end
-	if msg then
+	if msg and msg ~= "" then
 		local asc = string.byte(msg)
 		if msg == "off" then
 			minetest.swap_node(pos, { name = "nixie_tubes:alnum_32", param2 = node.param2})
