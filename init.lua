@@ -37,7 +37,7 @@ local reset_meta = function(pos)
 	minetest.get_meta(pos):set_string("formspec", "field[channel;Channel;${channel}]")
 end
 
-local on_digiline_receive = function(pos, node, channel, msg)
+local on_digiline_receive_std = function(pos, node, channel, msg)
 	local meta = minetest.get_meta(pos)
 	local setchan = meta:get_string("channel")
 	if setchan ~= channel then return end
@@ -91,11 +91,217 @@ for _,tube in ipairs(nixie_types) do
 		digiline = {
 			receptor = {},
 			effector = {
-				action = on_digiline_receive
+				action = on_digiline_receive_std
 			},
 		},
 		drop = "nixie_tubes:tube_off"
 	})
 end
 
+-- Alpha-numeric tubes (Burroughs B-7971 or similar)
+
+--[[
+
+Map of display wires:
+
+      --1------
+     |\   |8  /|
+    6| \  |  / |2
+     | 7\ | /9 |
+     |   \|/   |
+14--> ---- ---- <--10
+     |   /|\   |
+     |13/ | \11|
+    5| /  |  \ |3
+     |/ 12|   \|
+      ------4--
+          _
+      --¯¯ ¯¯-- <--15
+
+-- Wire positions in table:
+-- char = { 1, 2, 3, 4, .... , 13, 14, 15 }
+
+]]--
+
+local alnum_chars = {
+	{ " ",	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } },	-- 32
+	{ "!",	{ 0,0,0,0,1,1,0,0,0,0,0,0,0,0,0 } },
+	{ '"',	{ 0,0,0,0,0,1,0,1,0,0,0,0,0,0,0 } },
+	{ "#",	{ 0,1,1,1,0,0,0,1,0,1,0,1,0,1,0 } },
+	{ "$",	{ 1,0,1,1,0,1,0,1,0,1,0,1,0,1,0 } },
+	{ "%",	{ 0,0,1,0,0,1,0,0,1,0,0,0,1,0,0 } },
+	{ "&",	{ 1,0,0,1,1,0,1,0,1,0,1,0,0,1,0 } },
+	{ "'",	{ 0,0,0,0,0,0,0,1,0,0,0,0,0,0,0 } },
+	{ "(",	{ 0,0,0,0,0,0,0,0,1,0,1,0,0,0,0 } },
+	{ ")",	{ 0,0,0,0,0,0,1,0,0,0,0,0,1,0,0 } },
+	{ "*",	{ 0,0,0,0,0,0,1,1,1,0,1,1,1,0,0 } },
+	{ ",",	{ 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0 } },
+	{ "-",	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,1,0 } },
+	{ ".",	{ 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0 } },
+	{ "/",	{ 0,0,0,0,0,0,0,0,1,0,0,0,1,0,0 } },
+	{ "0",	{ 1,1,1,1,1,1,0,0,1,0,0,0,1,0,0 } },	-- 48
+	{ "1",	{ 0,1,1,0,0,0,0,0,1,0,0,0,0,0,0 } },
+	{ "2",	{ 1,1,0,1,0,0,0,0,0,1,0,0,1,0,0 } },
+	{ "3",	{ 1,1,1,1,0,0,0,0,0,1,0,0,0,0,0 } },
+	{ "4",	{ 0,1,1,0,0,1,0,0,0,1,0,0,0,1,0 } },
+	{ "5",	{ 1,0,1,1,0,1,0,0,0,1,0,0,0,1,0 } },
+	{ "6",	{ 1,0,1,1,1,1,0,0,0,1,0,0,0,1,0 } },
+	{ "7",	{ 1,0,0,0,0,0,0,0,1,0,0,1,0,0,0 } },
+	{ "8",	{ 1,1,1,1,1,1,0,0,0,0,1,0,0,1,0 } },
+	{ "9",	{ 1,1,1,0,0,1,0,0,0,1,0,0,0,1,0 } },
+	{ ":",	{ 0,0,0,0,0,0,0,1,0,0,0,1,0,0,0 } },	-- 58
+	{ ";",	{ 0,0,0,0,0,0,0,1,0,0,0,0,1,0,0 } },
+	{ "<",	{ 0,0,0,0,0,0,0,0,1,0,1,0,0,1,0 } },
+	{ "=",	{ 0,0,0,1,0,0,0,0,0,1,0,0,0,1,0 } },
+	{ ">",	{ 0,0,0,0,0,0,1,0,0,1,0,0,1,0,0 } },
+	{ "?",	{ 1,1,0,0,0,0,0,0,0,1,0,1,0,0,0 } },
+	{ "@",	{ 1,1,0,1,1,1,0,1,0,1,0,0,0,0,0 } },	-- 64
+	{ "A",	{ 1,1,1,0,1,1,0,0,0,1,0,0,0,1,0 } },
+	{ "B",	{ 1,1,1,1,0,0,0,1,0,1,0,1,0,0,0 } },
+	{ "C",	{ 1,0,0,1,1,1,0,0,0,0,0,0,0,0,0 } },
+	{ "D",	{ 1,1,1,1,0,0,0,1,0,0,0,1,0,0,0 } },
+	{ "E",	{ 1,0,0,1,1,1,0,0,0,0,0,0,0,1,0 } },
+	{ "F",	{ 1,0,0,0,1,1,0,0,0,0,0,0,0,1,0 } },
+	{ "G",	{ 1,0,1,1,1,1,0,0,0,1,0,0,0,0,0 } },
+	{ "H",	{ 0,1,1,0,1,1,0,0,0,1,0,0,0,1,0 } },
+	{ "I",	{ 1,0,0,1,0,0,0,1,0,0,0,1,0,0,0 } },
+	{ "J",	{ 0,1,1,1,1,0,0,0,0,0,0,0,0,0,0 } },
+	{ "K",	{ 0,0,0,0,1,1,0,0,1,0,1,0,0,1,0 } },
+	{ "L",	{ 0,0,0,1,1,1,0,0,0,0,0,0,0,0,0 } },
+	{ "M",	{ 0,1,1,0,1,1,1,0,1,0,0,0,0,0,0 } },
+	{ "N",	{ 0,1,1,0,1,1,1,0,0,0,1,0,0,0,0 } },
+	{ "O",	{ 1,1,1,1,1,1,0,0,0,0,0,0,0,0,0 } },
+	{ "P",	{ 1,1,0,0,1,1,0,0,0,1,0,0,0,1,0 } },
+	{ "Q",	{ 1,1,1,1,1,1,0,0,0,0,1,0,0,0,0 } },
+	{ "R",	{ 1,1,0,0,1,1,0,0,0,1,1,0,0,1,0 } },
+	{ "S",	{ 1,0,1,1,0,1,0,0,0,1,0,0,0,1,0 } },
+	{ "T",	{ 1,0,0,0,0,0,0,1,0,0,0,1,0,0,0 } },
+	{ "U",	{ 0,1,1,1,1,1,0,0,0,0,0,0,0,0,0 } },
+	{ "V",	{ 0,0,0,0,1,1,0,0,1,0,0,0,1,0,0 } },
+	{ "W",	{ 0,1,1,0,1,1,0,0,0,0,1,0,1,0,0 } },
+	{ "X",	{ 0,0,0,0,0,0,1,0,1,0,1,0,1,0,0 } },
+	{ "Y",	{ 0,0,0,0,0,0,1,0,1,0,0,1,0,0,0 } },
+	{ "Z",	{ 1,0,0,1,0,0,0,0,1,0,0,0,1,0,0 } },
+	{ "[",	{ 1,0,0,1,1,1,0,0,0,0,0,0,0,0,0 } },	-- 91
+	{ "\\",	{ 0,0,0,0,0,0,1,0,0,0,1,0,0,0,0 } },
+	{ "]",	{ 1,1,1,1,0,0,0,0,0,0,0,0,0,0,0 } },
+	{ "^",	{ 0,0,0,0,0,0,0,0,0,0,1,0,1,0,0 } },
+	{ "_",	{ 0,0,0,1,0,0,0,0,0,0,0,0,0,0,0 } },
+	{ "`",	{ 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0 } },
+	{ "a",	{ 1,1,1,1,0,0,0,0,0,1,0,0,1,0,0 } },	-- 97
+	{ "b",	{ 0,0,0,1,1,1,0,0,0,0,1,0,0,1,0 } },
+	{ "c",	{ 0,0,0,1,1,0,0,0,0,1,0,0,0,1,0 } },
+	{ "d",	{ 0,1,1,1,0,0,0,0,0,1,0,0,1,0,0 } },
+	{ "e",	{ 1,0,0,1,1,1,0,0,1,0,0,0,0,1,0 } },
+	{ "f",	{ 1,0,0,0,1,1,0,0,0,0,0,0,0,1,0 } },
+	{ "g",	{ 1,1,1,1,0,0,1,0,0,1,0,0,0,0,0 } },
+	{ "h",	{ 0,0,0,0,1,1,0,0,0,0,1,0,0,1,0 } },
+	{ "i",	{ 0,0,0,0,0,0,0,0,0,0,0,1,0,0,0 } },
+	{ "j",	{ 0,1,1,1,0,0,0,0,0,0,0,0,0,0,0 } },
+	{ "k",	{ 0,0,0,0,0,0,0,1,1,0,1,1,0,0,0 } },
+	{ "l",	{ 0,0,0,0,0,0,0,1,0,0,0,1,0,0,0 } },
+	{ "m",	{ 0,0,1,0,1,0,0,0,0,1,0,1,0,1,0 } },
+	{ "n",	{ 0,0,0,0,1,0,0,0,0,0,1,0,0,1,0 } },
+	{ "o",	{ 0,0,1,1,1,0,0,0,0,1,0,0,0,1,0 } },
+	{ "p",	{ 1,0,0,0,1,1,0,0,1,0,0,0,0,1,0 } },
+	{ "q",	{ 1,1,1,0,0,0,1,0,0,1,0,0,0,0,0 } },
+	{ "r",	{ 0,0,0,0,1,0,0,0,0,0,0,0,0,1,0 } },
+	{ "s",	{ 1,0,1,1,0,1,0,0,0,1,0,0,0,1,0 } },
+	{ "t",	{ 0,0,0,1,1,1,0,0,0,0,0,0,0,1,0 } },
+	{ "u",	{ 0,0,1,1,1,0,0,0,0,0,0,0,0,0,0 } },
+	{ "v",	{ 0,0,0,0,1,0,0,0,0,0,0,0,1,0,0 } },
+	{ "w",	{ 0,0,1,0,1,0,0,0,0,0,1,0,1,0,0 } },
+	{ "x",	{ 0,0,0,0,0,0,1,0,1,0,1,0,1,0,0 } },
+	{ "y",	{ 0,0,0,0,0,0,1,0,1,0,0,0,1,0,0 } },
+	{ "z",	{ 1,0,0,1,0,0,0,0,1,0,0,0,1,0,0 } },
+	{ "{",	{ 1,0,0,1,0,0,1,0,0,0,0,0,1,1,0 } },
+	{ "|",	{ 0,0,0,0,0,0,0,1,0,0,0,1,0,0,0 } },
+	{ "}",	{ 1,0,0,1,0,0,0,0,1,1,1,0,0,0,0 } },
+	{ "~",	{ 0,1,0,0,0,1,1,0,0,1,0,0,0,0,0 } },
+	{ string.char(127),	{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,0 } },	-- "DEL"
+	{ string.char(128),	{ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 } },	-- all-on
+	{ string.char(129),	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } },	-- "cursor" segment
+}
+
+local on_digiline_receive_alnum = function(pos, node, channel, msg)
+	local meta = minetest.get_meta(pos)
+	local setchan = meta:get_string("channel")
+	if setchan ~= channel then return end
+	if msg then
+		local asc = string.byte(msg) or 32
+		if msg == "off" then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_32", param2 = node.param2})
+		elseif msg == "colon" then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_58", param2 = node.param2})
+		elseif msg == "period" then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_46", param2 = node.param2})
+		elseif msg == "del" then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_127", param2 = node.param2})
+		elseif msg == "allon" then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_128", param2 = node.param2})
+		elseif msg == "cursor" then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_129", param2 = node.param2})
+		elseif asc and alnum_chars[asc] then
+			minetest.swap_node(pos, { name = "nixie_tubes:alnum_"..asc, param2 = node.param2})
+		end
+	end
+end
+
+for i in ipairs(alnum_chars) do
+	local char = alnum_chars[i][1]
+	local bits = alnum_chars[i][2]
+
+	local groups = { cracky = 2, not_in_creative_inventory = 1}
+	local light = LIGHT_MAX-4
+	local description = S("Alphanumeric Nixie Tube ("..char..")")
+
+	local wires = "nixie_tube_alnum_wires.png"
+	for j = 1, 15 do
+		if bits[j] == 1 then
+			wires = wires.."^nixie_tube_alnum_seg_"..j..".png"
+		end
+	end
+
+	if char == 32 then
+		groups = {cracky = 2}
+		light = nil
+		description = S("Alphanumeric Nixie Tube")
+		wires = "nixie_tube_alnum_wires.png"
+	end
+
+	minetest.register_node("nixie_tubes:alnum_"..string.byte(char), {
+		description = description,
+		drawtype = "mesh",
+		mesh = "nixie_tube.obj",
+		tiles = {
+			"nixie_tube_base.png",
+			"nixie_tube_backing.png",
+			wires,
+			"nixie_tube_anode.png",
+			"nixie_tube_glass.png",
+		},
+		use_texture_alpha = true,
+		groups = groups,
+		paramtype = "light",
+		paramtype2 = "facedir",
+		light_source = light,
+		selection_box = tube_cbox,
+		collision_box = tube_cbox,
+		on_construct = function(pos)
+			reset_meta(pos)
+		end,
+		on_receive_fields = function(pos, formname, fields, sender)
+			if (fields.channel) then
+				minetest.get_meta(pos):set_string("channel", fields.channel)
+			end
+		end,
+		digiline = {
+			receptor = {},
+			effector = {
+				action = on_digiline_receive_alnum
+			},
+		},
+		drop = "nixie_tubes:alnum_32"
+	})
+end
 
