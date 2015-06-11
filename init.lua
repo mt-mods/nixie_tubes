@@ -135,6 +135,7 @@ local alnum_chars = {
 	{ "(",	{ 0,0,0,0,0,0,0,0,1,0,1,0,0,0,0 } },
 	{ ")",	{ 0,0,0,0,0,0,1,0,0,0,0,0,1,0,0 } },
 	{ "*",	{ 0,0,0,0,0,0,1,1,1,0,1,1,1,0,0 } },
+	{ "+",	{ 0,0,0,0,0,0,0,1,0,1,0,1,0,1,0 } },
 	{ ",",	{ 0,0,0,0,0,0,0,0,0,0,0,0,1,0,0 } },
 	{ "-",	{ 0,0,0,0,0,0,0,0,0,0,0,0,0,1,0 } },
 	{ ".",	{ 0,0,0,0,1,0,0,0,0,0,0,0,0,0,0 } },
@@ -228,7 +229,7 @@ local on_digiline_receive_alnum = function(pos, node, channel, msg)
 	local setchan = meta:get_string("channel")
 	if setchan ~= channel then return end
 	if msg then
-		local asc = string.byte(msg) or 32
+		local asc = string.byte(msg)
 		if msg == "off" then
 			minetest.swap_node(pos, { name = "nixie_tubes:alnum_32", param2 = node.param2})
 		elseif msg == "colon" then
@@ -241,7 +242,7 @@ local on_digiline_receive_alnum = function(pos, node, channel, msg)
 			minetest.swap_node(pos, { name = "nixie_tubes:alnum_128", param2 = node.param2})
 		elseif msg == "cursor" then
 			minetest.swap_node(pos, { name = "nixie_tubes:alnum_129", param2 = node.param2})
-		elseif asc and alnum_chars[asc] then
+		elseif asc > 31 and alnum_chars[asc - 31] then
 			minetest.swap_node(pos, { name = "nixie_tubes:alnum_"..asc, param2 = node.param2})
 		end
 	end
