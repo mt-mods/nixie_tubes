@@ -263,7 +263,7 @@ for i in ipairs(alnum_chars) do
 		end
 	end
 
-	if char == 32 then
+	if char == " " then
 		groups = {cracky = 2}
 		light = nil
 		description = S("Alphanumeric Nixie Tube")
