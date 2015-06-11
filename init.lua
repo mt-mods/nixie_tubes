@@ -306,3 +306,24 @@ for i in ipairs(alnum_chars) do
 	})
 end
 
+-- crafts
+
+minetest.register_craft({
+	output = "nixie_tubes:tube_off 4",
+	recipe = {
+		{ "", "default:glass", "" },
+		{ "default:glass", "default:sign_wall", "default:glass" },
+		{ "default:glass", "default:mese_crystal_fragment", "default:glass" }
+	},
+})
+
+
+minetest.register_craft({
+	output = "nixie_tubes:alnum_32 4",
+	recipe = {
+		{ "", "default:glass", "" },
+		{ "default:glass", "default:sign_wall", "default:glass" },
+		{ "default:glass", "default:mese_crystal", "default:glass" }
+	},
+})
+
