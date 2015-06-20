@@ -47,19 +47,59 @@ local on_digiline_receive_std = function(pos, node, channel, msg)
 	end
 end
 
+local on_digiline_receive_deca = function(pos, node, channel, msg)
+	print("called digiline_receive_deca")
+	local meta = minetest.get_meta(pos)
+	local setchan = meta:get_string("channel")
+	if setchan ~= channel then return end
+	tubenum = string.gsub(node.name, "nixie_tubes:decatron_", "")
+	local num = tonumber(msg)
+	print(dump(msg))
+
+	if msg == "off" or (num and (num >= 0 and num <= 9)) then
+		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..msg, param2 = node.param2})
+
+	elseif msg == "inc" then
+		num = (tonumber(tubenum) or 0) + 1
+		if num > 9 then
+			num = 0
+			digiline:receptor_send(pos, digiline.rules.default, channel, "carry")
+		end
+		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..num, param2 = node.param2})
+
+	elseif msg == "dec" then
+		num = (tonumber(tubenum) or 0) - 1
+		if num < 0 then
+			num = 9
+			digiline:receptor_send(pos, digiline.rules.default, channel, "borrow")
+		end
+		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..num, param2 = node.param2})
+
+	elseif msg == "get" then
+		digiline:receptor_send(pos, digiline.rules.default, channel, tubenum)
+
+	end
+end
+
 -- the nodes:
 
 for _,tube in ipairs(nixie_types) do
 	local groups = { cracky = 2, not_in_creative_inventory = 1}
 	local light = LIGHT_MAX-4
+	local light2 = LIGHT_MAX-5
 	local description = S("Nixie Tube ("..tube..")")
+	local description2 = S("Decatron ("..tube..")")
 	local cathode = "nixie_tube_cathode_off.png^nixie_tube_cathode_"..tube..".png"
+	local cathode2 = "decatron_cathode_"..tube..".png"
 
 	if tube == "off" then
 		groups = {cracky = 2}
 		light = nil
+		light2 = nil
 		description = S("Nixie Tube")
+		description2 = S("Decatron")
 		cathode = "nixie_tube_cathode_off.png"
+		cathode2 = "nixie_tube_blank.png"
 	end
 
 	minetest.register_node("nixie_tubes:tube_"..tube, {
@@ -96,6 +136,51 @@ for _,tube in ipairs(nixie_types) do
 		},
 		drop = "nixie_tubes:tube_off"
 	})
+
+	if tube ~= "colon" and tube ~= "period" then
+		minetest.register_node("nixie_tubes:decatron_"..tube, {
+			description = description2,
+			drawtype = "mesh",
+			mesh = "decatron.obj",
+			tiles = {
+				"nixie_tube_base.png",
+				"decatron_internals.png",
+				"decatron_anode.png",
+				"decatron_cathode_pins.png",
+				cathode2,
+				"nixie_tube_glass.png",
+			},
+			use_texture_alpha = true,
+			groups = groups,
+			paramtype = "light",
+			paramtype2 = "facedir",
+			light_source = light2,
+			selection_box = tube_cbox,
+			collision_box = tube_cbox,
+			after_place_node = function(pos, placer, itemstack, pointed_thing)
+				minetest.set_node(pos, { name = "air"})
+				minetest.rotate_node(itemstack, placer, pointed_thing)
+				if minetest.get_node(pos).param2 == 12 then
+					minetest.set_node(pos, { name = "nixie_tubes:decatron_off", param2 = 15 })
+				end
+			end,
+			on_construct = function(pos)
+				reset_meta(pos)
+			end,
+			on_receive_fields = function(pos, formname, fields, sender)
+				if (fields.channel) then
+					minetest.get_meta(pos):set_string("channel", fields.channel)
+				end
+			end,
+			digiline = {
+				receptor = {},
+				effector = {
+					action = on_digiline_receive_deca
+				},
+			},
+			drop = "nixie_tubes:decatron_off"
+		})
+	end
 end
 
 -- Alpha-numeric tubes (Burroughs B-7971 or similar)
