@@ -48,13 +48,12 @@ local on_digiline_receive_std = function(pos, node, channel, msg)
 end
 
 local on_digiline_receive_deca = function(pos, node, channel, msg)
-	print("called digiline_receive_deca")
+
 	local meta = minetest.get_meta(pos)
 	local setchan = meta:get_string("channel")
 	if setchan ~= channel then return end
 	tubenum = string.gsub(node.name, "nixie_tubes:decatron_", "")
 	local num = tonumber(msg)
-	print(dump(msg))
 
 	if msg == "off" or (num and (num >= 0 and num <= 9)) then
 		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..msg, param2 = node.param2})
