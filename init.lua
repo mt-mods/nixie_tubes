@@ -52,7 +52,7 @@ local on_digiline_receive_deca = function(pos, node, channel, msg)
 	local meta = minetest.get_meta(pos)
 	local setchan = meta:get_string("channel")
 	if setchan ~= channel then return end
-	tubenum = string.gsub(node.name, "nixie_tubes:decatron_", "")
+	local tubenum = string.gsub(node.name, "nixie_tubes:decatron_", "")
 	local num = tonumber(msg)
 
 	if msg == "off" or (num and (num >= 0 and num <= 9)) then
