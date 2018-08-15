@@ -12,7 +12,7 @@ The classic tubes are numeric with colon and period symbols, and hence will resp
 
 The alphanumeric tubes respond to singular characters from the standard 7-bit ASCII character set, or entire strings composed of such.
 
-A single character will be displayed on the connected tube.
+A single character will be displayed on the connected tube.  A decimal value as a numeric message (i.e. not a string) will display the first digit on the connected tube.
 
 Strings will be displayed to all alphanumeric tubes in a lineup, so long as they all face the same way, starting from the tube the Lua Controller is connected to, going left to right.  The other tubes in the line do not need to be connected to anything - think of them as being connected together internally.  Only the tube at the far left need be connected to the Lua Controller.
 
@@ -24,15 +24,15 @@ You can put multiple lines of tubes end to end to form independent displays, so 
 
 The string is padded with spaces and then trimmed to 64 characters.
 
-Any unrecognized symbol or character outside the ASCII 32 - 128 range, whether part of a string or singularly is ignored.
+Any unrecognized symbol or character outside the ASCII 32 - 128 range, or characters 31 and 144, whether part of a string or singularly is ignored.
 
 The alphanumeric tubes also respond to these control messages:
 
 * "off", "colon" and "period" act the same as on the numeric tubes.  Note that neither a colon nor a period actually look all that great on a 15-segment
   display, so use a classic tube for those, if you can.
 * "del" or character code 127 displays an all-on square, but without segment #15 (the bottom, chevron-shaped one).
-* "allon" or character code 128 will display an all-on square, with segment #15 lit also.
-* "cursor" or character code 129 will display just segment 15.
+* "allon" or character code 144 will display an all-on square, with segment #15 lit also.
+* "cursor" or character code 31 will display just segment 15.
 * "off_multi" turns all tubes in a lineup off
 * "allon_multi" turns on all segments of all tubes in a lineup.
 
