@@ -3,12 +3,7 @@
 
 nixie_tubes = {}
 
-local S
-if minetest.get_modpath("intllib") then
-	S = intllib.Getter()
-else
-	S = function(s) return s end
-end
+local S = minetest.get_translator(minetest.get_current_modname())
 
 local nixie_types = {
 	"1",
@@ -124,7 +119,7 @@ for _,tube in ipairs(nixie_types) do
 			"nixie_tube_anode.png",
 			"nixie_tube_glass.png",
 		},
-		use_texture_alpha = true,
+		use_texture_alpha = "clip",
 		groups = groups,
 		paramtype = "light",
 		paramtype2 = "facedir",
@@ -159,7 +154,7 @@ for _,tube in ipairs(nixie_types) do
 			"nixie_tube_anode.png",
 			"nixie_tube_glass.png",
 		},
-		use_texture_alpha = true,
+		use_texture_alpha = "clip",
 		groups = groups,
 		paramtype = "light",
 		paramtype2 = "facedir",
@@ -196,7 +191,7 @@ for _,tube in ipairs(nixie_types) do
 				cathode2,
 				"nixie_tube_glass.png",
 			},
-			use_texture_alpha = true,
+			use_texture_alpha = "clip",
 			groups = groups,
 			paramtype = "light",
 			paramtype2 = "facedir",
@@ -465,7 +460,7 @@ for i in ipairs(alnum_chars) do
 			"nixie_tube_anode.png",
 			"nixie_tube_glass.png",
 		},
-		use_texture_alpha = true,
+		use_texture_alpha = "clip",
 		groups = groups,
 		paramtype = "light",
 		paramtype2 = "facedir",
