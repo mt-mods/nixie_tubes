@@ -4,6 +4,7 @@
 nixie_tubes = {}
 
 local S = minetest.get_translator(minetest.get_current_modname())
+local FS = function(...) return minetest.formspec_escape(S(...)) end
 
 local nixie_types = {
 	"1",
@@ -32,8 +33,8 @@ local reset_meta = function(pos)
 	minetest.get_meta(pos):set_string("formspec",
 			"formspec_version[4]"..
 			"size[8,4]"..
-			"button_exit[3,2.5;2,0.5;proceed;Proceed]"..
-			"field[1.75,1.5;4.5,0.5;channel;Channel;${channel}]"
+			"button_exit[3,2.5;2,0.5;proceed;"..FS("Proceed").."]"..
+			"field[1.75,1.5;4.5,0.5;channel;"..FS("Channel")..";${channel}]"
 	)
 end
 
@@ -66,7 +67,7 @@ local on_digiline_receive_deca = function(pos, node, channel, msg)
 		num = (tonumber(tubenum) or 0) + 1
 		if num > 9 then
 			num = 0
-			digiline:receptor_send(pos, digiline.rules.default, channel, "carry")
+			digilines:receptor_send(pos, digilines.rules.default, channel, "carry")
 		end
 		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..num, param2 = node.param2})
 
@@ -74,12 +75,12 @@ local on_digiline_receive_deca = function(pos, node, channel, msg)
 		num = (tonumber(tubenum) or 0) - 1
 		if num < 0 then
 			num = 9
-			digiline:receptor_send(pos, digiline.rules.default, channel, "borrow")
+			digilines:receptor_send(pos, digilines.rules.default, channel, "borrow")
 		end
 		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..num, param2 = node.param2})
 
 	elseif msg == "get" then
-		digiline:receptor_send(pos, digiline.rules.default, channel, tubenum)
+		digilines:receptor_send(pos, digilines.rules.default, channel, tubenum)
 
 	end
 end
@@ -88,10 +89,10 @@ end
 
 for _,tube in ipairs(nixie_types) do
 	local groups = { cracky = 2, not_in_creative_inventory = 1}
-	local light = LIGHT_MAX-4
-	local light2 = LIGHT_MAX-5
-	local description = S("Nixie Tube ("..tube..")")
-	local description2 = S("Decatron ("..tube..")")
+	local light = minetest.LIGHT_MAX-4
+	local light2 = minetest.LIGHT_MAX-5
+	local description = S("Nixie Tube (@1)", tube)
+	local description2 = S("Decatron (@1)", tube)
 	local description3 = S("Numitron Tube")
 	local cathode = "nixie_tube_cathode_off.png^nixie_tube_cathode_"..tube..".png"
 	local cathode2 = "decatron_cathode_"..tube..".png"
@@ -377,7 +378,8 @@ local display_string = function(pos, channel, string)
 		local node = minetest.get_node(pos2)
 		local meta = minetest.get_meta(pos2)
 		local setchan = meta:get_string("channel")
-		if not string.match(node.name, "nixie_tubes:alnum_") or (setchan ~= nil and setchan ~= "" and setchan ~= channel) then break end
+		if not string.match(node.name, "nixie_tubes:alnum_")
+			or (setchan ~= nil and setchan ~= "" and setchan ~= channel) then break end
 		local asc = string.byte(padded_string, i, i)
 		if node.param2 == fdir and ((asc > 30 and asc < 128) or asc == 144) then
 			minetest.swap_node(pos2, { name = "nixie_tubes:alnum_"..asc, param2 = node.param2})
@@ -413,9 +415,11 @@ local on_digiline_receive_alnum = function(pos, node, channel, msg)
 			if (asc > 30 and asc < 128) or asc == 144 then
 				minetest.swap_node(pos, { name = "nixie_tubes:alnum_"..asc, param2 = node.param2})
 			elseif msg == "get" then -- get value as ASCII numerical value
-				digiline:receptor_send(pos, digiline.rules.default, channel, tonumber(string.match(minetest.get_node(pos).name,"nixie_tubes:alnum_(.+)"))) -- wonderfully horrible string manipulaiton
+				digilines:receptor_send(pos, digilines.rules.default, channel,
+					tonumber(string.match(minetest.get_node(pos).name,"nixie_tubes:alnum_(.+)")))
 			elseif msg == "getstr" then -- get actual char
-				digiline:receptor_send(pos, digiline.rules.default, channel, string.char(tonumber(string.match(minetest.get_node(pos).name,"nixie_tubes:alnum_(.+)"))))
+				digilines:receptor_send(pos, digilines.rules.default, channel, string.char(
+					tonumber(string.match(minetest.get_node(pos).name,"nixie_tubes:alnum_(.+)"))))
 			end
 		end
 	elseif msg and type(msg) == "number" then
@@ -432,8 +436,8 @@ for i in ipairs(alnum_chars) do
 	local bits = alnum_chars[i][2]
 
 	local groups = { cracky = 2, not_in_creative_inventory = 1}
-	local light = LIGHT_MAX-4
-	local description = S("Alphanumeric Nixie Tube ("..char..")")
+	local light = minetest.LIGHT_MAX-4
+	local description = S("Alphanumeric Nixie Tube (@1)", char)
 
 	local wires = "nixie_tube_alnum_wires.png"
 	for j = 1, 15 do
@@ -505,6 +509,14 @@ minetest.register_craft({
 	},
 })
 
+minetest.register_craft({
+	output = "nixie_tubes:decatron_off 4",
+	recipe = {
+		{ "", "default:glass", "" },
+		{ "default:glass", "default:mese_crystal_fragment", "default:glass" },
+		{ "default:glass", "default:copper_ingot", "default:glass" }
+	},
+})
 
 minetest.register_craft({
 	output = "nixie_tubes:alnum_32 4",
