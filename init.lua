@@ -67,7 +67,7 @@ local on_digiline_receive_deca = function(pos, node, channel, msg)
 		num = (tonumber(tubenum) or 0) + 1
 		if num > 9 then
 			num = 0
-			digilines:receptor_send(pos, digilines.rules.default, channel, "carry")
+			digilines.receptor_send(pos, digilines.rules.default, channel, "carry")
 		end
 		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..num, param2 = node.param2})
 
@@ -75,12 +75,12 @@ local on_digiline_receive_deca = function(pos, node, channel, msg)
 		num = (tonumber(tubenum) or 0) - 1
 		if num < 0 then
 			num = 9
-			digilines:receptor_send(pos, digilines.rules.default, channel, "borrow")
+			digilines.receptor_send(pos, digilines.rules.default, channel, "borrow")
 		end
 		minetest.swap_node(pos, { name = "nixie_tubes:decatron_"..num, param2 = node.param2})
 
 	elseif msg == "get" then
-		digilines:receptor_send(pos, digilines.rules.default, channel, tubenum)
+		digilines.receptor_send(pos, digilines.rules.default, channel, tubenum)
 
 	end
 end
@@ -418,10 +418,10 @@ local on_digiline_receive_alnum = function(pos, node, channel, msg)
 			if (asc > 30 and asc < 128) or asc == 144 then
 				minetest.swap_node(pos, { name = "nixie_tubes:alnum_"..asc, param2 = node.param2})
 			elseif msg == "get" then -- get value as ASCII numerical value
-				digilines:receptor_send(pos, digilines.rules.default, channel,
+				digilines.receptor_send(pos, digilines.rules.default, channel,
 					tonumber(string.match(minetest.get_node(pos).name,"nixie_tubes:alnum_(.+)")))
 			elseif msg == "getstr" then -- get actual char
-				digilines:receptor_send(pos, digilines.rules.default, channel, string.char(
+				digilines.receptor_send(pos, digilines.rules.default, channel, string.char(
 					tonumber(string.match(minetest.get_node(pos).name,"nixie_tubes:alnum_(.+)"))))
 			end
 		end
